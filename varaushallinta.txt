@@ -1,0 +1,215 @@
+using ohjelmistotuotanto_projekti;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Net.Mail;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using iTextSharp.text; //käyttää tätä
+using iTextSharp.text.pdf; // pitää ladata nuget iTextSharp
+using System.IO; // käyttää tätä
+
+
+namespace VillagePeopleOy
+{
+    //varaushallinta
+    public partial class Varaushallinta : MetroFramework.Forms.MetroForm
+    {
+        List<toimipiste> toimipisteet = new List<toimipiste>();
+        List<varaus> varaukset = new List<varaus>();
+        DataAccess db = new DataAccess();
+        bool namiskaapainettu = false;
+        varaus v = new varaus();
+        toimipiste tp = new toimipiste();
+        List<asiakas> asiakkaat = new List<asiakas>();
+        List<palvelu> KaikkiPalvelut = new List<palvelu>();
+        List<varauksen_palvelut> ValitutPalvelutTilaukselle = new List<varauksen_palvelut>();
+
+        public Varaushallinta()
+        {
+            InitializeComponent();
+        }
+        private void UpdateBinding()
+        {
+            comboBox1.DataSource = toimipisteet;
+            comboBox1.DisplayMember = "Info";
+
+        }
+
+        private void Varaushallinta_Load(object sender, EventArgs e)
+        {
+            toimipisteet = db.GetToimipiste();
+            UpdateBinding();
+           
+
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            namiskaapainettu = true;
+            tp = (toimipiste)comboBox1.SelectedItem;
+            varaukset=db.GetVarausJaAsiakas(tp.toimipiste_id);
+            listBox1.DataSource = varaukset;
+            listBox1.DisplayMember = "Info";
+            KaikkiPalvelut = db.GetPalvelu(tp.toimipiste_id);
+            ListBoxpalvelut.DataSource = KaikkiPalvelut;
+            ListBoxpalvelut.DisplayMember = "Info";
+
+        }
+
+        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            List<palvelu> valpal = new List<palvelu>();
+            ValitutPalvelutTilaukselle.Clear();
+
+            //otetaan kiinni valittu varaus
+            v = (varaus)listBox1.SelectedItem;
+            asiakkaat=db.GetPeople(v.asiakas_id);
+
+
+            //viedään valitun varauksen tietoja textboxeille
+            foreach(asiakas a in asiakkaat)
+            {
+                textBoxEN.Text = a.etunimi;
+                textboxSN.Text = a.sukunimi;
+            }
+            dateTimePickeralku.Value = v.varattu_alkupvm;
+            dateTimePickerloppu.Value = v.varattu_loppupvm;
+
+            //Tuo listan varaus ID:n mukaisia varauksen_palveluita
+            ValitutPalvelutTilaukselle = db.GetVarauksenPalvelut(v.varaus_id);
+
+
+ 
+            //EI TOIMI
+             try
+            {
+                foreach (varauksen_palvelut p in ValitutPalvelutTilaukselle)
+                {
+                    valpal = db.GetVarauksenPalvelut2(p.palvelu_id);
+                    listBoxValitutPalvelut.Items.Add(valpal);
+                    listBoxValitutPalvelut.DataSource = valpal;
+                    listBoxValitutPalvelut.DisplayMember = "Info";
+                }
+
+            }
+            catch(System.ArgumentException ex)
+           {
+
+           }        
+        }
+
+        private void label6_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            email_Send();
+        }
+        private void email_Send()
+        {
+            MailMessage mail = new MailMessage();
+            SmtpClient SmtpServer = new SmtpClient("smtp.gmail.com");
+            mail.From = new MailAddress("VillagePeople.noreply@gmail.com"); //lähettäjän sposti(pysyy samana)
+            mail.To.Add("kosonen.henri@gmail.com"); //vastaanotajan sposti (salasana on PerttiKeinonen123) tällä voi demota vastaanottajaa
+            mail.Subject = "Hyvä Village People Oy:n asiakas"; //viestin aihe/otsikko
+            mail.Body = "Ohessa tulostettava laskunne."; //viestin sisältö
+            
+            Attachment attachment;
+            attachment = new Attachment("c:/temp/LASKU.pdf"/*liitteen sijainti vois olla vaikka tämä*/);  //näillä voi liittää mukaan liitteen
+            mail.Attachments.Add(attachment);
+
+            SmtpServer.Port = 587;
+            SmtpServer.Credentials = new System.Net.NetworkCredential("VillagePeople.noreply@gmail.com", "VillagePeople123"); //lähettäjän sposti ja salasana(pysyy samana)
+            SmtpServer.EnableSsl = true;
+
+            SmtpServer.Send(mail);
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            lasku lasku = new lasku();
+            foreach (varaus v in varaukset)
+            {
+                lasku.varaus_id = v.varaus_id;
+            }
+
+
+            foreach (asiakas a in asiakkaat)
+            {
+                lasku.asiakas_id = a.asiakas_id;
+                //lasku.ReferenceEquals();
+            };
+            using (SaveFileDialog sfd = new SaveFileDialog() { Filter = "Pdf-tiedostot| *.pdf", ValidateNames = true })
+            {
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    Document doc = new Document(PageSize.A4.Rotate());
+                    try
+                    {
+                        PdfWriter.GetInstance(doc, new FileStream(sfd.FileName, FileMode.Create));
+                        doc.Open();
+                        //doc.Add(new Paragraph("Nimi: {0}", asiakkaan_nimi)); näillä voi varmaan laittaa riveittäin lisää tietoa dokumenttiin, en oo varma, ois varmaan paremman näkönen
+                        doc.Add(new Paragraph(textBoxEN.Text));
+                        doc.Add(new Paragraph(textboxSN.Text));
+                        doc.Add(new Paragraph(dateTimePickeralku.Value.ToShortDateString()));
+                        doc.Add(new Paragraph(dateTimePickerloppu.Value.ToShortDateString()));
+                        doc.Add(new Paragraph(lasku.summa.ToString()));
+                        v.laskutettu = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message, "Message", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        doc.Close();
+                    }
+                }//end of if
+            }//end of using 
+        }
+
+        private void Varaushallinta_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Mainfrm main = new Mainfrm();
+            main.Show();
+        }
+
+        private void palvelut_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void buttonlisaa_Click(object sender, EventArgs e)
+        {
+
+            palvelu p = (palvelu)ListBoxpalvelut.SelectedItem;
+          //  listBoxValitutPalvelut.Items.Add(p);
+        }
+
+        private void buttonpoista_Click(object sender, EventArgs e)
+        {
+            palvelu p = (palvelu)listBoxValitutPalvelut.SelectedItem;
+           // listBoxValitutPalvelut.Items.Remove(p);
+        }
+
+        private void listBoxValitutPalvelut_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            db.UpdateVaraus(v.varaus_id, v.asiakas_id,dateTimePickeralku.Value.Date.ToString("yyyy-MM-dd"), dateTimePickerloppu.Value.Date.ToString("yyyy-MM-dd"));
+            varaukset = db.GetVarausJaAsiakas(tp.toimipiste_id);
+            listBox1.DataSource = varaukset;
+            listBox1.DisplayMember = "Info";
+        }
+    }
+}

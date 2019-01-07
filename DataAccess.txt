@@ -1,0 +1,488 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using Dapper;
+using MySql.Data.MySqlClient;
+using VillagePeopleOy;
+
+namespace ohjelmistotuotanto_projekti
+{
+    public class DataAccess
+    {
+
+        public List<asiakas> GetAllPeoples()
+        {
+            List<asiakas> KaikkiAsiakkaat;
+            //Connection using Dapper from MySql
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                //testailu
+                try
+                {
+                        KaikkiAsiakkaat = connection.Query<asiakas>($"SELECT * FROM asiakas;").ToList();
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                    KaikkiAsiakkaat = new List<asiakas>(); 
+                }
+                return KaikkiAsiakkaat;
+            }
+
+        }
+        public List<asiakas> GetPeople(string Sukunimi)
+        {
+            List<asiakas> output;
+            //Connection using Dapper from MySql
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                //testailu
+                try
+                {
+                    if (Sukunimi == "")
+                    {
+                        output = connection.Query<asiakas>($"SELECT * FROM asiakas;").ToList();
+                    }
+                    else
+                    {
+                        output = connection.Query<asiakas>($"SELECT * FROM asiakas WHERE sukunimi='{Sukunimi}';").ToList();
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                    output = new List<asiakas>();
+
+                }
+                return output;
+            }
+        }
+        public List<asiakas> GetPeople(int id)
+        {
+            List<asiakas> output;
+            //Connection using Dapper from MySql
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                //testailu
+                try
+                {
+
+                    output = connection.Query<asiakas>($"SELECT * FROM asiakas WHERE asiakas_id='{id}';").ToList();
+
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                    output = new List<asiakas>();
+
+                }
+                return output;
+            }
+        }
+
+        public List<asiakas> GetPeopleB(string haku, List<asiakas> KaikkiAsiakkaat)
+        {
+            //Tää hakee löytyykö kannasta vastaavuutta merkeille mitä syötettiin
+
+            haku = haku.ToLower();
+            List<asiakas> hakuTulokset = new List<asiakas>();
+            foreach (asiakas a in KaikkiAsiakkaat)
+            {
+                String etunimi = a.etunimi.ToLower();
+                String sukunimi = a.sukunimi.ToLower();
+                String postitmp = a.postitoimipaikka.ToLower();
+                String kokonimi = etunimi + " " + sukunimi;
+                String kokonimiVaarinPain = sukunimi + " " + etunimi;
+                String osoite = a.lahiosoite.ToLower();
+                String postitoimipaikka = a.postitoimipaikka.ToLower();
+
+                if (etunimi.Contains(haku) || sukunimi.Contains(haku) ||
+                a.postinro.Contains(haku) || postitoimipaikka.Contains(haku) ||
+                kokonimi.Contains(haku) || kokonimiVaarinPain.Contains(haku) ||
+                osoite.Contains(haku))
+                {
+                    hakuTulokset.Add(a);
+                }
+            }
+            return hakuTulokset;
+        }
+
+        public List<toimipiste> GetToimipiste()
+        {
+            List<toimipiste> output;
+            //Connection using Dapper from MySql
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                //testailu
+                try
+                {
+                    output = connection.Query<toimipiste>($"SELECT * FROM toimipiste ;").ToList();
+
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                    output = new List<toimipiste>();
+
+                }
+                return output;
+            }
+        }
+
+        public List<palvelu> GetPalvelu()
+        {
+            List<palvelu> output;
+            //Connection using Dapper from MySql
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                //testailu
+                try
+                {
+                    output = connection.Query<palvelu>($"SELECT * FROM palvelu;").ToList();
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                    output = new List<palvelu>();
+
+                }
+                return output;
+            }
+        }
+        public List<palvelu> GetPalvelu(int id)
+        {
+            List<palvelu> output;
+            //Connection using Dapper from MySql
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                //testailu
+                try
+                {
+                    output = connection.Query<palvelu>($"SELECT * FROM palvelu WHERE toimipiste_id={id} OR toimipiste_id=0;").ToList();
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                    output = new List<palvelu>();
+
+                }
+                return output;
+            }
+        }
+
+        public List<varauksen_palvelut> GetVarauksenPalvelut(int varaus_id)
+        {
+            List<varauksen_palvelut> output;
+            //Connection using Dapper from MySql
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                //testailu
+                try
+                {
+                    output = connection.Query<varauksen_palvelut>($" SELECT * FROM varauksen_palvelut WHERE varaus_id={varaus_id};").ToList();
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                    output = new List<varauksen_palvelut>();
+
+                }
+                return output;
+            }
+        }
+
+        public List<palvelu> GetVarauksenPalvelut2(int palvelu_id)
+        {
+            List<palvelu> output;
+            //Connection using Dapper from MySql
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                //testailu
+                try
+                {
+                    output = connection.Query<palvelu>($"SELECT palvelu.nimi,palvelu.hinta FROM (varauksen_palvelut INNER JOIN palvelu ON palvelu.palvelu_id=varauksen_palvelut.palvelu_id) WHERE varauksen_palvelut.palvelu_id={palvelu_id} LIMIT 1").ToList();
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                    output = new List<palvelu>();
+
+                }
+                return output;
+            }
+        }
+        //Varauksen haku ID:llä
+        public List<varaus> GetVaraus(int id)
+        {
+            List<varaus> output;
+            //Connection using Dapper from MySql
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                //testailu
+                try
+                {
+                    output = connection.Query<varaus>($"SELECT * FROM varaus WHERE toimipiste_id={id};").ToList();
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                    output = new List<varaus>();
+
+                }
+                return output;
+            }
+        }
+        //Tää hakee viimesimmän syötetyn varauksen kannasta
+        public List<varaus> GetVaraus()
+        {
+            List<varaus> output;
+            //Connection using Dapper from MySql
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                //testailu
+                try
+                {
+                    output = connection.Query<varaus>($"SELECT * FROM varaus WHERE varaus_id = (SELECT MAX(varaus_id) FROM varaus);").ToList();
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                    output = new List<varaus>();
+                }
+                return output;
+            }
+        }
+        public List<varaus> GetVarausJaAsiakas(int id)
+        {
+            List<varaus> output;
+            //Connection using Dapper from MySql
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                //testailu
+                try
+                {
+                    output = connection.Query<varaus>($"SELECT * FROM varaus WHERE varaus.toimipiste_id={id};").ToList();
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                    output = new List<varaus>();
+
+                }
+                return output;
+            }
+        }
+
+        public List<varauksen_palvelut> GetVarausPalvelut(int id)
+        {
+            List<varauksen_palvelut> output;
+            //Connection using Dapper from MySql
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                //testailu
+                try
+                {
+                    output = connection.Query<varauksen_palvelut>($"SELECT * FROM varauksen_palvelut  WHERE varaus_id={id};").ToList();
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                    output = new List<varauksen_palvelut>();
+
+                }
+                return output;
+            }
+        }
+
+
+        public void UpdatePeople(int id, string Etunimi, string Sukunimi, string Lahiosoite, string Postinumero, string Email, string Puhelinnro, string Postitoimipaikka)
+        {
+            //Connection using Dapper from MySql
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                //testailu
+                try
+                {
+                    connection.Execute($"UPDATE asiakas SET etunimi='{Etunimi}', sukunimi='{Sukunimi}', lahiosoite='{Lahiosoite}',postitoimipaikka='{Postitoimipaikka}',postinro='{Postinumero}', email='{Email}', puhelinnro='{Puhelinnro}' WHERE asiakas_ID='{id}';");
+
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                }
+            }
+        }
+        public void UpdateToimipiste(int id, string nimi, string lahiosoite, string postitoimipaikka, string postinro, string email, string puhelinnro)
+        {
+            //Connection using Dapper from MySql
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                //testailu
+                try
+                {
+                    connection.Execute($"UPDATE toimipiste SET nimi='{nimi}', lahiosoite='{lahiosoite}', postitoimipaikka='{postitoimipaikka}',postinro='{postinro}',email='{email}', puhelinnro='{puhelinnro}' WHERE toimipiste_id='{id}';");
+
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                }
+            }
+        }
+        public void UpdatePalvelu(int id, int toimipiste_id, string nimi, string kuvaus, string hinta,string alv)
+        {
+            //Connection using Dapper from MySql
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                //testailu
+                try
+                {
+                    connection.Execute($"UPDATE palvelu SET toimipiste_id='{toimipiste_id}', nimi='{nimi}',kuvaus='{kuvaus}',hinta='{hinta}',alv='{alv}' WHERE palvelu_id='{id}';");
+
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                }
+            }
+        }
+        public void UpdateVaraus(int id, int asiakas_id, string alkupvm, string  loppupvm)
+        {
+            //Connection using Dapper from MySql
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                //testailu
+                try
+                {
+                    connection.Execute($"UPDATE varaus SET asiakas_id='{asiakas_id}', varattu_alkupvm='{alkupvm}',varattu_loppupvm='{loppupvm}' WHERE varaus_id='{id}';");
+
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                }
+            }
+        }
+
+        public void InsertAsiakas(string Etunimi, string Sukunimi, string Lahiosoite, string Postinumero, string Email, string Puhelinnro, string Postitoimipaikka)
+        {
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+
+                try
+                {
+                    connection.Execute($"INSERT INTO asiakas (etunimi,sukunimi,lahiosoite,postinro,email,puhelinnro,postitoimipaikka) VALUES('{Etunimi}','{Sukunimi}','{Lahiosoite}','{Postinumero}','{Email}','{Puhelinnro}','{Postitoimipaikka}');");
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                }
+
+            }
+        }
+        public void InsertToimipiste(string nimi, string lahiosoite, string postitoimipaikka, string postinro, string email, string puhelinnro)
+        {
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+
+                try
+                {
+                connection.Execute($"INSERT INTO toimipiste (nimi,lahiosoite,postitoimipaikka,postinro,email,puhelinnro) VALUES('{nimi}','{lahiosoite}','{postitoimipaikka}','{postinro}','{email}','{puhelinnro}');");
+                }
+                catch(Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!"+e.ToString());
+                }
+
+            }
+        }
+        public void InsertPalvelu(int toimipiste_id, string nimi, string kuvaus, string hinta,string alv)
+        {
+            //Connection using Dapper from MySql
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                //testailu
+                 try
+                {
+                connection.Execute ($"INSERT INTO palvelu (toimipiste_id,nimi,kuvaus,hinta,alv) VALUES('{toimipiste_id}','{nimi}','{kuvaus}','{hinta}','{alv}');");
+
+                }
+                catch (Exception e) {
+                  var warning = MessageBox.Show("Kantaan ei pääsyä!"+e.ToString());
+
+                 }   
+                //var output = connection.Query<asiakas>("asiakas @asiakas_id",new {asiakasID=ID}).ToList(); //tää on parempi
+            }
+        }
+        public void InsertVaraus(int asiakas_id, int toimipiste_id,string varauspvm,string alkupvm,string loppupvm)
+        {
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                try
+                {
+                    connection.Execute($"INSERT INTO varaus (asiakas_id,toimipiste_id,varattu_pvm,varattu_alkupvm,varattu_loppupvm) VALUES('{asiakas_id}','{toimipiste_id}','{varauspvm}','{alkupvm}','{loppupvm}');");
+
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+
+                }
+            }
+        }
+        public void InsertVarauksenPalvelut(int varausid, int palveluid,int lukumaara)
+        {
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                try
+                {
+                    connection.Execute($"INSERT INTO varauksen_palvelut (varaus_id,palvelu_id,lkm) VALUES('{varausid}','{palveluid}','{lukumaara}');");
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                }
+            }
+        }
+        public void DeletePalvelu(int palvelu_id)
+        {
+            //Connection using Dapper from MySql
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                try
+                {
+                    connection.Execute($"DELETE FROM palvelu WHERE palvelu_id={palvelu_id};");
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                }
+            }
+        }
+
+        public void DeleteToimipiste(int toimipiste_id)
+        {
+            //Connection using Dapper from MySql
+            using (MySqlConnection connection = new MySqlConnection(Helper.CnnVal("ohj1_18_syksy_ryhmad")))
+            {
+                try
+                {
+                    connection.Execute($"DELETE FROM toimipiste WHERE toimipiste_id={toimipiste_id};");
+                }
+                catch (Exception e)
+                {
+                    var warning = MessageBox.Show("Kantaan ei pääsyä!" + e.ToString());
+                }
+
+            }
+        }
+
+
+
+    }
+}

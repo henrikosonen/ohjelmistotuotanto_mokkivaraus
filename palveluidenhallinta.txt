@@ -1,0 +1,204 @@
+using ohjelmistotuotanto_projekti;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace VillagePeopleOy
+{
+    public partial class Palveluidenhallinta : MetroFramework.Forms.MetroForm
+    {
+        
+        List<palvelu> palvelut = new List<palvelu>();
+        palvelu palv = new palvelu();
+        DataAccess db = new DataAccess();
+        bool namiskaapainettu = false;
+        public Palveluidenhallinta()
+        {
+            InitializeComponent();
+        }
+        private void UpdateBinding()
+        {
+            //listbox komponentti.datasource=toimipisteet lista
+            comboBoxpalvelu.DataSource = palvelut;
+            comboBoxpalvelu.DisplayMember = "Info";
+        }
+
+        private void Palveluidenhallinta_Load(object sender, EventArgs e)
+        {
+            palvelut =db.GetPalvelu();
+            UpdateBinding();
+            comboBoxpalvelu.SelectedIndex = -1;
+        }
+        
+        private void buttonUusipalvelu_Click(object sender, EventArgs e)
+        {
+            namiskaapainettu = true;
+            textBoxNimi.Text = "";
+            textBoxhinta.Text = "";
+            textBoxtoimipiste.Text = "";
+            richTextBoxKuvaus.Text = "";
+            comboBoxpalvelu.SelectedIndex = -1;
+        }
+        
+        private void buttonTallenna_Click(object sender, EventArgs e)
+        {
+            int toimipiste;
+            if (textBoxtoimipiste.Text == "")
+            {
+                toimipiste = 0;
+            }
+            else
+            {
+                toimipiste = Convert.ToInt32(textBoxtoimipiste.Text);
+            }
+
+            string hinta = textBoxhinta.Text.Replace(',','.');
+
+            string alvi = textBoxALV.Text;
+
+            if (namiskaapainettu==false)
+            {
+                db.UpdatePalvelu(palv.palvelu_id,toimipiste,textBoxNimi.Text,richTextBoxKuvaus.Text,hinta,alvi);
+            }
+            else
+            {
+                db.InsertPalvelu(toimipiste, textBoxNimi.Text, richTextBoxKuvaus.Text, hinta,alvi);
+            }
+
+            namiskaapainettu = false;
+            //luodaan uusi luokka spekseillä ja viedään kantaan
+
+            textBoxNimi.Text = "";
+            textBoxhinta.Text = "";
+            textBoxtoimipiste.Text = "";
+            richTextBoxKuvaus.Text = "";
+            textBoxALV.Text = "";
+            comboBoxpalvelu.SelectedIndex = -1;
+            palvelut = db.GetPalvelu();
+            UpdateBinding();
+        }
+
+        private void comboBoxpalvelu_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+            if (comboBoxpalvelu.SelectedIndex > -1)
+            {
+                namiskaapainettu = false;
+                palv = (palvelu)comboBoxpalvelu.SelectedItem;
+                textBoxNimi.Text = palv.nimi;
+                textBoxhinta.Text = palv.hinta.ToString();
+                //Halutaan varmaan hakea nimi eikä id:tä, pitää tuo toteuttaa lopussa
+                //textBoxtoimipiste.Text = db.GetTextBoxItem(palv.palvelu_id,sender.ToString());
+                textBoxtoimipiste.Text = palv.toimipiste_id.ToString();
+                richTextBoxKuvaus.Text = palv.kuvaus;
+                textBoxALV.Text=palv.alv;
+            }
+            else
+            {
+                namiskaapainettu = true;
+                textBoxNimi.Text = "";
+                textBoxhinta.Text = "";
+                textBoxtoimipiste.Text = "";
+                richTextBoxKuvaus.Text = "";
+                textBoxALV.Text = "";
+            }
+        }
+
+        private void textboxtyyppi_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textBoxtoimipiste_TextChanged(object sender, EventArgs e)
+        {
+            int i;
+            if (!int.TryParse(textBoxtoimipiste.Text, out i))
+            {
+                textBoxtoimipiste.Clear();
+            }
+        }
+
+        private void textBoxhinta_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void comboBoxpalvelu_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Palveluidenhallinta_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Mainfrm main = new Mainfrm();
+            main.Show();
+        }
+
+        private void textBoxhinta_KeyUp(object sender, KeyEventArgs e)
+        {
+
+        }
+
+        private void textBoxhinta_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar >= 48 && e.KeyChar <= 57 || e.KeyChar==44 || e.KeyChar==46)
+            {
+
+            }
+            else
+            {
+                textBoxhinta.Clear();
+            }
+        }
+
+        private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar >= 48 && e.KeyChar <= 57)
+            {
+
+            }
+            else
+            {
+                textBoxALV.Clear();
+            }
+        }
+
+        private void textBoxALV_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            DialogResult dialogResult = MessageBox.Show("Oletko varma, että haluat poistaa palvelun?", "Oletko varma?", MessageBoxButtons.YesNo);
+            if (dialogResult == DialogResult.Yes)
+            // Pyytää varmennuksen kenttien tyhjennykseen
+            {
+                if (namiskaapainettu == false)
+                {
+                    db.DeletePalvelu(palv.palvelu_id);
+                    textBoxNimi.Text = "";
+                    textBoxhinta.Text = "";
+                    textBoxtoimipiste.Text = "";
+                    richTextBoxKuvaus.Text = "";
+                    textBoxALV.Text = "";
+                    comboBoxpalvelu.SelectedIndex = -1;
+                    palvelut = db.GetPalvelu();
+                    UpdateBinding();
+                }
+            }
+            else if (dialogResult == DialogResult.No)
+            {
+                // Ei tee mitään
+            }
+
+
+        }
+    }
+}

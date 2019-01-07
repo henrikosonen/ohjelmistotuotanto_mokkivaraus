@@ -1,0 +1,148 @@
+using ohjelmistotuotanto_projekti;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace VillagePeopleOy
+{
+    public partial class Toimipistehallinta : MetroFramework.Forms.MetroForm
+    {
+        List<toimipiste> toimipisteet = new List<toimipiste>();
+        toimipiste toimpist = new toimipiste();
+        bool namiskaaonpainettu = false;
+        public Toimipistehallinta()
+        {
+            InitializeComponent();
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+        private void UpdateBinding()
+        {
+            //listbox komponentti.datasource=toimipisteet lista
+            listBoxToimipisteet.DataSource = toimipisteet;
+            listBoxToimipisteet.DisplayMember = "Info";
+        }
+        private void Toimipistehallinta_Load(object sender, EventArgs e)
+        {
+            listBoxToimipisteet.SelectedIndex = -1;
+            DataAccess db = new DataAccess();
+            toimipisteet=db.GetToimipiste();
+            UpdateBinding();
+        }
+
+        private void listBoxToimipisteet_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (listBoxToimipisteet.SelectedIndex > -1)
+            {
+                namiskaaonpainettu = true;
+                toimpist = (toimipiste)listBoxToimipisteet.SelectedItem;
+                textBoxNimi.Text = toimpist.nimi;
+                textBoxPuhelinnro.Text = toimpist.puhelinnro;
+                textBoxPTP.Text = toimpist.postitoimipaikka;
+                textBoxPostNro.Text = toimpist.postinro;
+                textBoxEmail.Text = toimpist.email;
+                textBoxOsoite.Text = toimpist.lahiosoite;
+            }
+        }
+
+        private void groupBox1_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label3_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textBoxEN_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void BtnTallenna_Click(object sender, EventArgs e)
+        {
+            DataAccess db = new DataAccess();
+
+            //Jos toimipiste_id on päivitellään muutoin uuden luonti
+            if (namiskaaonpainettu==true)
+            {
+                db.UpdateToimipiste(toimpist.toimipiste_id,textBoxNimi.Text, textBoxOsoite.Text,textBoxPTP.Text,textBoxPostNro.Text,textBoxEmail.Text, textBoxPuhelinnro.Text);
+            }
+            else
+            {
+                db.InsertToimipiste(textBoxNimi.Text, textBoxOsoite.Text, textBoxPTP.Text, textBoxPostNro.Text, textBoxEmail.Text, textBoxPuhelinnro.Text);
+            }
+
+            textBoxNimi.Text = "";
+            textBoxPuhelinnro.Text = "";
+            textBoxPTP.Text = "";
+            textBoxPostNro.Text = "";
+            textBoxEmail.Text = "";
+            textBoxOsoite.Text = "";
+            toimipisteet = db.GetToimipiste();
+            UpdateBinding();
+            namiskaaonpainettu = false;
+        }
+
+        private void buttonUusitoimipiste_Click(object sender, EventArgs e)
+        {
+            namiskaaonpainettu = false;
+            textBoxNimi.Text = "";
+            textBoxPuhelinnro.Text = "";
+            textBoxPTP.Text = "";
+            textBoxPostNro.Text = "";
+            textBoxEmail.Text = "";
+            textBoxOsoite.Text = "";
+        }
+
+        private void BtnTyhjenna_Click(object sender, EventArgs e)
+        {
+            namiskaaonpainettu = false;
+            textBoxNimi.Text = "";
+            textBoxPuhelinnro.Text = "";
+            textBoxPTP.Text = "";
+            textBoxPostNro.Text = "";
+            textBoxEmail.Text = "";
+            textBoxOsoite.Text = "";
+        }
+
+        private void Toimipistehallinta_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Mainfrm main = new Mainfrm();
+            main.Show();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            DialogResult dialogResult = MessageBox.Show("Oletko varma, että haluat poistaa toimipisteen?", "Oletko varma?", MessageBoxButtons.YesNo);
+            if (dialogResult == DialogResult.Yes)
+            // Pyytää varmennuksen kenttien tyhjennykseen
+            {
+                if (namiskaaonpainettu == true)
+                {
+                    DataAccess db = new DataAccess();
+                    db.DeleteToimipiste(toimpist.toimipiste_id);
+                    listBoxToimipisteet.SelectedIndex = 0;
+                    toimipisteet = db.GetToimipiste();
+                    UpdateBinding();
+                }
+            }
+            else if (dialogResult == DialogResult.No)
+            {
+                // Ei tee mitään
+            }
+
+
+        }
+    }
+}

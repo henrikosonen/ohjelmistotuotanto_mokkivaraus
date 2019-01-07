@@ -1,0 +1,29 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace VillagePeopleOy
+{
+    public class varaus
+    {
+        public int varaus_id { get; set; }
+        public int asiakas_id { get; set; }
+        public int toimipiste_id { get; set; }
+        public DateTime varaus_pvm { get; set; }
+        public DateTime vahvistus_pvm { get; set; }
+        public DateTime varattu_alkupvm { get; set; }
+        public DateTime varattu_loppupvm { get; set; }
+        public bool laskutettu { get; set; }
+
+        public string Info
+        {
+            get
+            {
+                return $"Varaus: {varaus_id} Välillä {varattu_alkupvm.ToShortDateString()}-{varattu_loppupvm.ToShortDateString()}";
+            }
+        }
+
+    }
+}

@@ -1,0 +1,224 @@
+using MySql.Data.MySqlClient;
+using ohjelmistotuotanto_projekti;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace VillagePeopleOy
+{
+    public partial class Asiakastiedot : MetroFramework.Forms.MetroForm
+    {
+        asiakas asiakas = new asiakas();
+        List<asiakas> asiakkaat = new List<asiakas>();
+        List<asiakas> KaikkiAsiakkaat = new List<asiakas>();
+        List<asiakas> TulosAsiakkaat = new List<asiakas>();
+        bool namiskaaonpainettu=false;
+
+        public Asiakastiedot()
+        {
+            InitializeComponent();
+
+        }
+
+        private void Asiakastiedot_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Asiakastiedot_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            Mainfrm main = new Mainfrm();
+            main.Show();
+        }
+
+        private void suljeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Mainfrm main = new Mainfrm();
+            main.Show();
+        }
+
+        private void inEnglishBetaToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CustomerInformation customerInformationfrm = new CustomerInformation();
+            customerInformationfrm.Show();
+            this.Hide();
+        }
+
+        private void TeeVarausToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+            Mainfrm mainfrm = new Mainfrm();
+            mainfrm.Show();
+            this.Hide();
+        }
+
+        private void BtnTyhjenna_Click(object sender, EventArgs e)
+        {
+            {
+                DialogResult dialogResult = MessageBox.Show("Oletko varma, että haluat tyhjentää kentät?", "Oletko varma?", MessageBoxButtons.YesNo);
+                if (dialogResult == DialogResult.Yes)
+
+                // Asks if you are sure you want to clear fields. Just to make sure.
+
+                {
+                    textBoxEN.Text = "";
+                    textBoxSN.Text = "";
+                    textBoxPuh.Text = "";
+                    textBoxOsoite.Text = "";
+                    textBoxKaupunki.Text = "";
+                    textBoxPTPnum.Text = "";
+                    textBoxSposti.Text = "";
+
+                    // Clears all the fields
+                }
+                else if (dialogResult == DialogResult.No)
+                {
+                    // Does nothing..
+                }
+            }
+        }
+
+        private void BtnTallenna_Click(object sender, EventArgs e)
+        {
+            DataAccess db = new DataAccess();
+
+
+            //jos ei olla painettu uusi asiakas nappia
+            if (namiskaaonpainettu==false)
+            {
+                db.UpdatePeople(asiakas.asiakas_id,textBoxEN.Text, textBoxSN.Text, textBoxOsoite.Text, textBoxPTPnum.Text, textBoxSposti.Text, textBoxPuh.Text, textBoxKaupunki.Text);
+            }
+            else
+            {
+                db.InsertAsiakas(textBoxEN.Text, textBoxSN.Text, textBoxOsoite.Text, textBoxPTPnum.Text, textBoxSposti.Text, textBoxPuh.Text, textBoxKaupunki.Text);
+            }
+
+            textBoxEN.Text = "";
+            textBoxSN.Text = "";
+            textBoxOsoite.Text = "";
+            textBoxPTPnum.Text = "";
+            textBoxSposti.Text = "";
+            textBoxPuh.Text = "";
+            textBoxKaupunki.Text = "";
+            textBoxHaku.Text = "";
+            namiskaaonpainettu = false;
+            asiakkaat = db.GetPeople(textBoxHaku.Text);
+            UpdateBinding();
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textBoxHaku_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void UpdateBinding()
+        {
+            //listbox komponentti.datasource=asiakkat lista
+            listBoxAT.DataSource = asiakkaat;
+            listBoxAT.DisplayMember = "FullInfo";
+        }
+        //hakee sukunimellä asiakkaita tähän voisi heittää että hakee aina kun syöttää merkkiä vastaavuuksia
+        private void btnHae_Click(object sender, EventArgs e)
+        {
+            DataAccess db = new DataAccess();
+            asiakkaat = db.GetPeople(textBoxHaku.Text);
+            UpdateBinding();
+        }
+
+        //en oo varma toimiiko tämä mutta pitäisi heittää listan valittu arvo asiakas classiin josta textboxeille
+        private void listBoxAT_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            asiakas = (asiakas)listBoxAT.SelectedItem;
+            textBoxEN.Text = asiakas.etunimi;
+            textBoxSN.Text = asiakas.sukunimi;
+            textBoxOsoite.Text = asiakas.lahiosoite;
+            textBoxPTPnum.Text = asiakas.postinro;
+            textBoxSposti.Text = asiakas.email;
+            textBoxPuh.Text = asiakas.puhelinnro;
+            textBoxKaupunki.Text = asiakas.postitoimipaikka;
+
+        }
+
+        private void toimipisteidenHallintaToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Toimipistehallinta toimipistehallinta = new Toimipistehallinta();
+            toimipistehallinta.Show();
+        }
+
+        private void textBoxHaku_KeyUp(object sender, KeyEventArgs e)
+        {
+
+
+        }
+
+        private void textBoxHaku_KeyDown(object sender, KeyEventArgs e)
+        {
+            DataAccess db = new DataAccess();
+            if (textBoxHaku.Text == "")
+            {
+
+            }
+            else
+            {
+                KaikkiAsiakkaat = db.GetAllPeoples();
+                TulosAsiakkaat = db.GetPeopleB(textBoxHaku.Text, KaikkiAsiakkaat);
+                listBoxAT.DataSource = TulosAsiakkaat;
+                listBoxAT.DisplayMember = "FullInfo";
+            }
+        }
+
+        private void varausHistoriaToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textBoxPTPnum_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar >= 48 && e.KeyChar <= 57)
+            {
+
+            }
+            else
+            {
+                textBoxPTPnum.Clear();
+            }
+        }
+
+        private void textBoxPuh_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar >= 48 && e.KeyChar <= 57)
+            {
+
+            }
+            else
+            {
+                textBoxPuh.Clear();
+            }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            textBoxKaupunki.Text = "";
+            textBoxOsoite.Text = "";
+            textBoxEN.Text = "";
+            textBoxHaku.Text = "";
+            textBoxPTPnum.Text = "";
+            textBoxSposti.Text = "";
+            textBoxSN.Text = "";
+            textBoxPuh.Text = "";
+            namiskaaonpainettu = true;
+        }
+    }
+}
+

@@ -1,0 +1,21 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace VillagePeopleOy
+{
+    public class lasku
+    {
+        public int lasku_id { get; set; }
+        public int varaus_id { get; set; }
+        public int asiakas_id { get; set; }
+        public string nimi { get; set; }
+        public string lahiosoite { get; set; }
+        public string postitoimipaikka { get; set; }
+        public string postinro { get; set; }
+        public double summa { get; set; }
+        public double alv { get; set; } 
+    }
+}

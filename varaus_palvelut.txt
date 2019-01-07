@@ -1,0 +1,47 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+
+namespace VillagePeopleOy
+{
+    public class varauksen_palvelut 
+    {
+        public int varaus_id { get; set; }
+        public int palvelu_id { get; set; }
+        public int lkm { get; set; }
+
+        public varauksen_palvelut(int varaus_id, int palvelu_id, int lkm)
+        {
+            this.varaus_id = varaus_id;
+            this.palvelu_id = palvelu_id;
+            this.lkm = lkm;
+        }
+
+        public varauksen_palvelut(int palvelu_id)
+        {
+            this.palvelu_id = palvelu_id;
+        }
+        public varauksen_palvelut()
+        {
+
+        }
+
+        public override string ToString()
+        {
+            return base.ToString();
+        }
+
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+    }
+}
